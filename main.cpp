@@ -11,13 +11,15 @@ public:
     rclcpp::Publisher<sensor_msgs::msg::PointCloud2>::SharedPtr segmented_cp_pub;
     ControllerNode() : Node("controller_node")
     {
-        this->cloud_sub = this->create_subscription<sensor_msgs::msg::PointCloud2>(this->input_topic, qos,
+        auto qos = rclcpp::QoS(rclcpp::KeepLast(10), rmw_qos_profile_sensor_data);
+
+        this->cloud_sub = this->create_subscription<sensor_msgs::msg::PointCloud2>("/lidar_points", qos,
                                                                                 std::bind(&ControllerNode::scanCallback, this, std::placeholders::_1));
         this->segmented_cp_pub = this->create_publisher<sensor_msgs::msg::PointCloud2>("/segmented_pc", 100);
     }
 
 
-    void ControllerNode::scanCallback(const sensor_msgs::msg::PointCloud2::SharedPtr sub_cloud)
+    void scanCallback(const sensor_msgs::msg::PointCloud2::SharedPtr sub_cloud)
     {
         /* CONVERSION */
         std::vector<Point> h_points;
@@ -38,7 +40,7 @@ public:
 
         std::vector<Point> gr = {}, n_gr = {};
 
-        estimateGroundCUDA(h_points, gr, n_gr, 3, 3, 0.5);
+        estimateGroundCUDA(h_points, gr, n_gr, 3, 20, 0.15);
 
         /* PUBLISHING */
         auto segmented_pc_msg = std::make_shared<sensor_msgs::msg::PointCloud2>();
@@ -73,7 +75,6 @@ public:
 };
 
 int main(int argc, char** argv) {
-  signal(SIGINT, handleSignal);
   rclcpp::init(argc, argv);
 
   auto node = std::make_shared<ControllerNode>();
