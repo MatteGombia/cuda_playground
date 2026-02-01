@@ -140,6 +140,8 @@ void estimateGroundCUDA(
     float* d_sums;
     cudaMalloc(&d_sums, 10 * sizeof(float));
 
+
+    auto t1 = std::chrono::steady_clock::now();
     // 2. Extract Initial Seeds
     // Sort entire cloud by Z. 
     // Note: If you want to preserve the original order, you should sort an index array instead.
@@ -187,6 +189,10 @@ void estimateGroundCUDA(
             th_dist
         );
     }
+
+    auto t2 = std::chrono::steady_clock::now();
+    auto duration = std::chrono::duration_cast<std::chrono::duration<double, std::milli>>(t2 - t1);
+    std::cout << "conversione in: " << duration.count() << " ms" << std::endl;
 
     // --------------------------------------------------------------
     // OUTPUT GATHERING
