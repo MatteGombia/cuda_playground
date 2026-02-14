@@ -28,25 +28,76 @@ __global__ void computeCovarianceStats(
         if (is_ground[idx]) include_point = true;
     }
 
+    __shared__ float local_sums[10];
+    if (threadIdx.x < 10) {
+        local_sums[threadIdx.x] = 0; // The first “num_bins” threads initialise the shared mem
+    }
+    __syncthreads();
+
     if (include_point) {
         Point p = points[idx];
+        atomicAdd(&local_sums[0], p.x);
+
+        atomicAdd(&local_sums[1], p.y);
+
+        atomicAdd(&local_sums[2], p.z);
+
+        atomicAdd(&local_sums[3], p.x * p.x);
+
+        atomicAdd(&local_sums[4], p.x * p.y);
+
+        atomicAdd(&local_sums[5], p.x * p.z);
         
-        // Accumulate Sums for Centroid
-        atomicAdd(&global_sums[0], p.x);
-        atomicAdd(&global_sums[1], p.y);
-        atomicAdd(&global_sums[2], p.z);
+        atomicAdd(&local_sums[6], p.y * p.y);
 
-        // Accumulate Products for Covariance (xx, xy, xz, yy, yz, zz)
-        atomicAdd(&global_sums[3], p.x * p.x);
-        atomicAdd(&global_sums[4], p.x * p.y);
-        atomicAdd(&global_sums[5], p.x * p.z);
-        atomicAdd(&global_sums[6], p.y * p.y);
-        atomicAdd(&global_sums[7], p.y * p.z);
-        atomicAdd(&global_sums[8], p.z * p.z);
+        atomicAdd(&local_sums[7], p.y * p.z);
 
-        // Count valid points
-        atomicAdd(&global_sums[9], 1.0f);
+        atomicAdd(&local_sums[8], p.z * p.z);
+
+        atomicAdd(&local_sums[9], 1);
+        __syncthreads();
+
+
+
+        switch (threadIdx.x)
+        {
+            case 0:
+                atomicAdd(&global_sums[0], local_sums[0]);
+                break;
+
+            case 1:
+                atomicAdd(&global_sums[1], local_sums[1]);
+                break;
+            case 2:
+                atomicAdd(&global_sums[2], local_sums[2]);
+                break;
+            case 3:
+                atomicAdd(&global_sums[3], local_sums[3]);
+                break;
+            case 4:       
+                atomicAdd(&global_sums[4], local_sums[4]);
+                break;
+            case 5:
+                atomicAdd(&global_sums[5], local_sums[5]);  
+                break;
+            case 6:
+                atomicAdd(&global_sums[6], local_sums[6]);
+                break;
+            case 7:
+                atomicAdd(&global_sums[7], local_sums[7]);
+                break;
+            case 8:
+                atomicAdd(&global_sums[8], local_sums[8]);
+                break;
+            case 9:
+                atomicAdd(&global_sums[9], local_sums[9]);
+                break;
+            
+            default:
+                break;
+        }
     }
+    
 }
 
 // ------------------------------------------------------------------

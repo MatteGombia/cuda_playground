@@ -1,10 +1,5 @@
 cmake_minimum_required(VERSION 3.18)
 
-# 1. Force Compilers (Must be before project)
-set(CMAKE_C_COMPILER /usr/bin/gcc-10)
-set(CMAKE_CXX_COMPILER /usr/bin/g++-10)
-set(CMAKE_CUDA_HOST_COMPILER /usr/bin/g++-10)
-
 project(cuda_segmentation LANGUAGES CXX CUDA)
 
 # 2. Force Standards
@@ -41,10 +36,12 @@ if(CMAKE_COMPILER_IS_GNUCXX OR CMAKE_CXX_COMPILER_ID MATCHES "GNU")
   target_compile_options(plane_fitting PRIVATE -std=c++17)
 endif()
 
-# This tells NVCC to tell GCC to use C++17
+# Enable CUDA C++17 for atomic_ref support
 target_compile_options(plane_fitting PRIVATE 
-  $<$<COMPILE_LANGUAGE:CUDA>:-Xcompiler -std=c++17>
+  $<$<COMPILE_LANGUAGE:CUDA>:--std=c++17 -arch=sm_75>
 )
+# Enable device code atomics for cuda::atomic_ref
+set_target_properties(plane_fitting PROPERTIES CUDA_ARCHITECTURES "75;80;86")
 # ---------------------------------------------
 
 # 6. Install Rules
