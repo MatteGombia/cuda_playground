@@ -40,7 +40,7 @@ public:
 
         std::vector<Point> gr = {}, n_gr = {};
 
-        estimateGroundCUDA(h_points, gr, n_gr, 3, 20, 0.15);
+        compute(h_points, gr, n_gr, 3, 50, 0.08);
 
         /* PUBLISHING */
         auto segmented_pc_msg = std::make_shared<sensor_msgs::msg::PointCloud2>();

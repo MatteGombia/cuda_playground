@@ -38,7 +38,7 @@ endif()
 
 # Enable CUDA C++17 for atomic_ref support
 target_compile_options(plane_fitting PRIVATE 
-  $<$<COMPILE_LANGUAGE:CUDA>:--std=c++17 -arch=sm_75>
+  $<$<COMPILE_LANGUAGE:CUDA>:--std=c++17 -arch=sm_75 --extended-lambda>
 )
 # Enable device code atomics for cuda::atomic_ref
 set_target_properties(plane_fitting PROPERTIES CUDA_ARCHITECTURES "75;80;86")
